@@ -69,8 +69,7 @@ def send_request():
             item_request.append(address_split[4])
             item_request.append(address_split[5])
             obj_request["requests"] = chkSum.generate_modbus_message(item_request)
-            # value_sensor = sensor_connect.sendRequestToSensor(obj_request)
-            value_sensor = 1
+            value_sensor = sensor_connect.sendRequestToSensor(obj_request)
             response_queue.append({"address": address, "value": value_sensor})
     except Exception as general_exception:
             print(general_exception)
@@ -96,6 +95,7 @@ schedule.every(1).minutes.do(job_queue.put, fetch_api)
 
 def start():
     try:
+        sensor_connect.startProcesses()
         print("Init Process")
         fetch_api()
         bridge_mqtt_kafka.run()
