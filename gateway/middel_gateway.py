@@ -1,20 +1,16 @@
-import os
-import apps.home.__sensor_reading.handler.ai_detection as AI
-from keras.models import load_model
-import cv2
 from pickle import TRUE
+from random import random
 import time
 import threading
 from numpy import append
 from requests import request
 import schedule
 import queue
-import apps.home.__sensor_reading.utils.crc_modbus_16_calculation as chkSum
-from apps.home.__sensor_reading.handler.main import APIHandler
-from apps.home.__sensor_reading.handler.main import KafkaHandler 
-from apps.home.__sensor_reading.handler.main import MQTTHandler 
-from apps.home.__sensor_reading.handler.main import BridgeMQTT2KafkaHandler 
-import apps.home.__sensor_reading.handler.modbus_serial_connect as sensor_connect
+import utils.crc_modbus_16_calculation as chkSum
+from handler.main import APIHandler
+from handler.main import MQTTHandler 
+from handler.main import BridgeMQTT2KafkaHandler 
+import handler.modbus_serial_connect as sensor_connect
 import sentry_sdk
 import logging
 import serial.serialutil as serial_util
@@ -52,7 +48,7 @@ def pub_response():
     while True:
         if(len(response_queue) > 0):
             response = response_queue.pop()
-            mqtt_instance_sensor_data.pub({'address': response["address"], 'value': response["value"], 'time': time.strftime("%H:%M:%S", time.localtime())})
+            mqtt_instance_sensor_data.pub(json.dumps({'address': response["address"], 'value': response["value"], 'time': time.strftime("%H:%M:%S", time.localtime())}))
 
 
 def send_request():
@@ -64,7 +60,7 @@ def send_request():
             }
             # calc check sum
             item_request = []
-            address = request.sensor_address + ',' + request.label_address
+            address = request['sensor_address'] + ',' + request['label_address']
             address_split = address.split(",")
             item_request.append(address_split[0])
             item_request.append(address_split[1])
@@ -73,16 +69,18 @@ def send_request():
             item_request.append(address_split[4])
             item_request.append(address_split[5])
             obj_request["requests"] = chkSum.generate_modbus_message(item_request)
-            value_sensor = sensor_connect.sendRequestToSensor(obj_request)
+            # value_sensor = sensor_connect.sendRequestToSensor(obj_request)
+            value_sensor = 1
             response_queue.append({"address": address, "value": value_sensor})
     except Exception as general_exception:
             print(general_exception)
 
 
-def automation_trigger(message):
-    obj = json.loads(message.value)
-    obj["requests"] = chkSum.generate_modbus_message(obj["requests"].split(","))
-    sensor_connect.sendRequestToSensor(obj)
+def automation_trigger(client, userdata, message):
+    msg_payload =  json.loads(message.payload)
+    # print("Received MQTT message: ", msg_payload)
+    msg_payload["requests"] = chkSum.generate_modbus_message(msg_payload["requests"].split(","))
+    sensor_connect.sendRequestToSensor(msg_payload)
 
 
 def worker_main():
@@ -98,22 +96,19 @@ schedule.every(1).minutes.do(job_queue.put, fetch_api)
 
 def start():
     try:
-        print("Process start")
+        print("Init Process")
         fetch_api()
         bridge_mqtt_kafka.run()
         mqtt_instance_trigger.sub(automation_trigger)
-        sensor_connect.startProcesses()
+        
         worker_thread_request = threading.Thread(target=worker_main)
         worker_thread_response = threading.Thread(target=pub_response)
-        # worker_thread_automation = threading.Thread(target=mqtt_instance_trigger.sub, args=(automation_trigger))
         worker_thread_request.setDaemon(True)
-        # worker_thread_automation.setDaemon(True)
         worker_thread_response.setDaemon(True)
-
         worker_thread_request.start()
-        # worker_thread_automation.start()
         worker_thread_response.start()
 
+        print("Process start")
         loop_forever = True
         while loop_forever:
             try:

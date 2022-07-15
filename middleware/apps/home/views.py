@@ -2,11 +2,6 @@
 """
 Copyright (c) 2019 - present AppSeed.us
 """
-
-import datetime
-import imp
-import json
-import time
 from tkinter import Label
 from unicodedata import name
 from django import template
@@ -16,9 +11,8 @@ from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import redirect
 from django.template import loader
 from django.urls import reverse
-import kafka
-from apps.home.models import CronJob, Sensor, SensorLabel, SensorRequest
-from apps.home.__sensor_reading.handler import kafka_handler
+import paho.mqtt.client as mqtt
+from apps.home.models import Sensor, SensorLabel, SensorRequest
 
 @login_required(login_url="/login/")
 def index(request):
@@ -150,45 +144,36 @@ def trigger_monitor(request):
         data.status = 1
         address = data.address
     data.save()
-    kafka_handler.pub("automation_data", {"requests": address})
+    mqtt_broker = "mqtt.eclipseprojects.io"
+    mqtt_client = mqtt.Client("Middleware_MQTT")
+    mqtt_client.connect(mqtt_broker)
+    mqtt_client.publish("automation_data", {"requests": address})
     return redirect('sensors')
 
-@login_required(login_url="/login/")
-def schedule_monitor(request, address):
-    sensor = Sensor.objects.get(address=address)
-    if not sensor.is_monitor:
-        return redirect('sensors')
-    context = {'segment': 'sensors', 'sensor': sensor}
-    html_template = loader.get_template('home/schedule-monitor.html')
-    if request.method == 'POST':
-        form_data = request.POST
-        cron_on_condition = form_data['cron-on-condition']
-        cron_off_condition = form_data['cron-off-condition']
-        if(cron_on_condition.strip() != ""):
-            cron_on = CronJob(sensor_address=sensor, address=sensor.address,
-                              name=sensor.name + "_ON", condition=cron_on_condition)
-            cron_on.save()
-            set_cron(cron_on_condition, sensor.address, cron_on.name)
-        if(cron_off_condition.strip() != ""):
-            cron_off = CronJob(sensor_address=sensor, address=sensor.address_off,
-                               name=sensor.name + "_OFF", condition=cron_off_condition)
-            cron_off.save()
-            set_cron(cron_off_condition, sensor.address_off, cron_off.name)
-        print("Write Cron")
-        return redirect('sensors')
-    return HttpResponse(html_template.render(context, request))
-
-
-def set_cron(condition, address, name):
-    try:
-        tab = CronTab(tabfile='apps\home\MyScripts.tab')
-        job = tab.new(command='python apps\home\__sensor_reading\cron.py {0}'.format(
-            address), comment=name)
-        job.setall(condition)
-        tab.write('apps\home\MyScripts.tab')
-        print(tab)
-    except Exception as ex:
-        print(ex)
+# @login_required(login_url="/login/")
+# def schedule_monitor(request, address):
+#     sensor = Sensor.objects.get(address=address)
+#     if not sensor.is_monitor:
+#         return redirect('sensors')
+#     context = {'segment': 'sensors', 'sensor': sensor}
+#     html_template = loader.get_template('home/schedule-monitor.html')
+#     if request.method == 'POST':
+#         form_data = request.POST
+#         cron_on_condition = form_data['cron-on-condition']
+#         cron_off_condition = form_data['cron-off-condition']
+#         if(cron_on_condition.strip() != ""):
+#             cron_on = CronJob(sensor_address=sensor, address=sensor.address,
+#                               name=sensor.name + "_ON", condition=cron_on_condition)
+#             cron_on.save()
+#             set_cron(cron_on_condition, sensor.address, cron_on.name)
+#         if(cron_off_condition.strip() != ""):
+#             cron_off = CronJob(sensor_address=sensor, address=sensor.address_off,
+#                                name=sensor.name + "_OFF", condition=cron_off_condition)
+#             cron_off.save()
+#             set_cron(cron_off_condition, sensor.address_off, cron_off.name)
+#         print("Write Cron")
+#         return redirect('sensors')
+#     return HttpResponse(html_template.render(context, request))
 
 
 @login_required(login_url="/login/")

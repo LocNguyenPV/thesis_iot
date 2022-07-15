@@ -1,13 +1,8 @@
 from multiprocessing import Queue, Process
 import serial.tools.list_ports
 import time
-import apps.home.__sensor_reading.utils.crc_modbus_16_calculation as chkSum
+
 serial_model = None
-
-
-dict_sensor = {}
-
-
 def getAvailableComPort():
     ports = serial.tools.list_ports.comports()
     N = len(ports)

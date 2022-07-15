@@ -38,11 +38,3 @@ class SensorRequest(models.Model):
     # label = models.CharField(max_length=1000)
     def __str__(self):
         return self.chart_type
-
-class CronJob(models.Model):
-    sensor_address = models.ForeignKey(Sensor, on_delete=models.CASCADE, default=0)
-    address = models.CharField(max_length=100)
-    name = models.CharField(max_length=100)
-    condition = models.CharField(max_length=100)
-    def __str__(self):
-        return self.name

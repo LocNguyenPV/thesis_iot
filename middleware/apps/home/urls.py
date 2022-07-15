@@ -17,7 +17,7 @@ urlpatterns = [
     path('update/<str:address>', views.update, name='update'),
     path('create_monitor', views.create_monitor, name='create_monitor'),
     path('update_monitor/<str:address>', views.update_monitor, name='update_monitor'),
-    path('schedule_monitor/<str:address>', views.schedule_monitor, name='schedule_monitor'),
+    # path('schedule_monitor/<str:address>', views.schedule_monitor, name='schedule_monitor'),
     path('trigger_monitor', views.trigger_monitor, name='trigger_monitor'),
     # Matches any html file
     re_path(r'^.*\.*', views.pages, name='pages'),

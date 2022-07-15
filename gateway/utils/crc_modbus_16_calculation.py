@@ -31,7 +31,6 @@ def covnert_message_to_all_nummber(message_array):
 
 def generate_modbus_message(message_array):
     message_converted = covnert_message_to_all_nummber(message_array)
-    print(1)
     crc_high_byte, crc_low_byte = crc_modbus_calculate(message_converted)
     message_converted.append(crc_low_byte)
     message_converted.append(crc_high_byte)

@@ -1,4 +1,5 @@
 from argparse import ONE_OR_MORE
+from ast import While
 import os
 from datetime import datetime
 from kafka import KafkaProducer, KafkaConsumer
@@ -7,7 +8,7 @@ from urllib.parse import urljoin
 from dotenv import load_dotenv
 import json
 import paho.mqtt.client as mqtt
-
+import time
 class APIHandler:
     domain = None
     url_request = None
@@ -60,21 +61,22 @@ class MQTTHandler:
         self.mqtt_broker = "mqtt.eclipseprojects.io"
         self.mqtt_client = mqtt.Client(id)
         self.mqtt_client.connect(self.mqtt_broker)
-        self.kafka_instance = KafkaHandler()
         self.topic = topic
     
     def pub(self, message):
         self.mqtt_client.publish(self.topic, message)
+        print("MQTT pub: " + message + " to topic: " + self.topic)
 
     def sub(self, callback):
-        self.mqtt_client.loop_forever()
+        self.mqtt_client.loop_start()
         self.mqtt_client.subscribe(self.topic)
         self.mqtt_client.on_message = callback
 
 
 
 class BridgeMQTT2KafkaHandler:
-
+    mqtt_client = None
+    mqtt_broker = None
     mqtt_instance = None
     kafka_instance = None
     topic = None
@@ -84,12 +86,13 @@ class BridgeMQTT2KafkaHandler:
         self.kafka_instance = KafkaHandler(topic)
         self.topic = topic
     
-    def on_message(client, userdata, message):
-        msg_payload = str(message.payload)
-        print("Received MQTT message: ", msg_payload)
-        client.kafka_instance.pub(msg_payload.encode('ascii'))
-        # print("KAFKA: Just published " + msg_payload + " to topic temperature2")
+    
 
     def run(self):
-        self.mqtt_instance.sub(self.on_message)
+        def pub_kafka(client, userdata, message):
+            msg_payload = json.loads(message.payload)
+            self.kafka_instance.pub(msg_payload)
+        
+        self.mqtt_instance.sub(pub_kafka)
+       
         

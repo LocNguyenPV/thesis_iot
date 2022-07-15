@@ -6,7 +6,6 @@ from django_eventstream import send_event
 from kafka import KafkaConsumer
 # import django
 # django.setup()
-from apps.home.__sensor_reading import middel_gateway as gateway
 class SSEConfig(AppConfig):
     name = 'apps'
 
