@@ -1,0 +1,194 @@
+{% extends "layouts/base.html" %} {% block title %} Manage Sensor {% endblock %}
+
+<!-- Specific Page CSS goes HERE  -->
+{% block stylesheets %}{% endblock stylesheets %} {% block content %}
+
+<div class="card">
+  <div class="card-header">
+    <h5 class="title">Schedule Monitor</h5>
+  </div>
+  <div class="card-body">
+    <form name="form" method="post" action="/schedule_monitor/{{sensor.address}}">
+      {% csrf_token %}
+      <div class="row">
+        <div class="col-md-4 px-md-1">
+          <div class="form-group">
+            <label>Monitor Name</label>
+            <input
+              type="text"
+              name="name"
+              disabled
+              class="form-control"
+              value="{{ sensor.name }}"
+            />
+          </div>
+        </div>
+        <div class="col-md-4 pl-md-1">
+          <div class="form-group">
+            <label for="exampleInputEmail1">Monitor address</label>
+            <input
+              type="text"
+              name="address"
+              disabled
+              class="form-control"
+              value="{{ sensor.address }}"
+            />
+          </div>
+        </div>
+        <div class="col-md-4 pl-md-1">
+          <div class="form-group">
+            <label for="exampleInputEmail1">Monitor address OFF</label>
+            <input
+              type="text"
+              name="address_off"
+              disabled
+              class="form-control"
+              value="{{ sensor.address_off }}"
+            />
+          </div>
+        </div>
+      </div>
+      <div class="row m-2">
+        <div class="col-md-12">
+          <h4 class="mx-1">Schedule ON</h4>
+          <input name="cron-on-condition" value="" hidden />
+          <div id="cron-on" class="text-success h4"></div>
+          <div class="row mx-1" id="div-labels">
+            <div class="col-md-2 mt-2 form-group">
+              <label>Min</label>
+              <input
+                type="text"
+                name="on_min"
+                class="form-control input-cron-on"
+              />
+            </div>
+            <div class="col-md-2 mt-2 form-group">
+              <label>Hour</label>
+              <input
+                type="text"
+                name="on_hour"
+                class="form-control input-cron-on"
+              />
+            </div>
+            <div class="col-md-2 mt-2 form-group">
+              <label>Day (Month)</label>
+              <input
+                type="text"
+                name="on_day_month"
+                class="form-control input-cron-on"
+              />
+            </div>
+            <div class="col-md-2 mt-2 form-group">
+              <label>Month</label>
+              <input
+                type="text"
+                name="on_month"
+                class="form-control input-cron-on"
+              />
+            </div>
+            <div class="col-md-2 mt-2 form-group">
+              <label>Day (week)</label>
+              <input
+                type="text"
+                name="on_day_week"
+                class="form-control input-cron-on"
+              />
+            </div>
+          </div>
+        </div>
+        <div class="col-md-12">
+          <h4 class="mx-1">Schedule OFF</h4>
+          <input name="cron-off-condition" value="" hidden />
+          <div id="cron-off" class="text-danger h4"></div>
+          <div class="row mx-1" id="div-labels">
+            <div class="col-md-2 mt-2 form-group">
+              <label>Min</label>
+              <input
+                type="text"
+                name="off_min"
+                class="form-control input-cron-off"
+              />
+            </div>
+            <div class="col-md-2 mt-2 form-group">
+              <label>Hour</label>
+              <input
+                type="text"
+                name="off_hour"
+                class="form-control input-cron-off"
+              />
+            </div>
+            <div class="col-md-2 mt-2 form-group">
+              <label>Day (Month)</label>
+              <input
+                type="text"
+                name="off_day_month"
+                class="form-control input-cron-off"
+              />
+            </div>
+            <div class="col-md-2 mt-2 form-group">
+              <label>Month</label>
+              <input
+                type="text"
+                name="off_month"
+                class="form-control input-cron-off"
+              />
+            </div>
+            <div class="col-md-2 mt-2 form-group">
+              <label>Day (week)</label>
+              <input
+                type="text"
+                name="off_day_week"
+                class="form-control input-cron-off"
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+      <a href="/sensors" class="btn btn-fill btn-primary">Back</a>
+      <button type="submit" class="btn btn-fill btn-success">Save</button>
+    </form>
+  </div>
+  <div class="card-footer"></div>
+</div>
+
+{% endblock content %}
+
+<!-- Specific Page JS goes HERE  -->
+{% block javascripts %}
+<script src="https://unpkg.com/cronstrue@1.48.0/dist/cronstrue.min.js"></script>
+<script>
+  $("input.input-cron-on").change(function () {
+    let list = [];
+    let min = $("input[name='on_min']").val().trim();
+    let hour = $("input[name='on_hour']").val().trim();
+    let day_month = $("input[name='on_day_month']").val().trim();
+    let month = $("input[name='on_month']").val().trim();
+    let day_week = $("input[name='on_day_week']").val().trim();
+    list.push(min === "" ? "*" : min);
+    list.push(hour === "" ? "*" : hour);
+    list.push(day_month === "" ? "*" : day_month);
+    list.push(month === "" ? "*" : month);
+    list.push(day_week === "" ? "*" : day_week);
+    let cron = list.join(" ");
+    $("#cron-on").html(cronstrue.toString(cron));
+    $("input[name='cron-on-condition']").val(cron);
+  });
+  $("input.input-cron-off").change(function () {
+    let list = [];
+    let min = $("input[name='off_min']").val().trim();
+    let hour = $("input[name='off_hour']").val().trim();
+    let day_month = $("input[name='off_day_month']").val().trim();
+    let month = $("input[name='off_month']").val().trim();
+    let day_week = $("input[name='off_day_week']").val().trim();
+    list.push(min === "" ? "*" : min);
+    list.push(hour === "" ? "*" : hour);
+    list.push(day_month === "" ? "*" : day_month);
+    list.push(month === "" ? "*" : month);
+    list.push(day_week === "" ? "*" : day_week);
+    let cron = list.join(" ");
+    $("#cron-off").html(cronstrue.toString(cron));
+    $("input[name='cron-off-condition']").val(cron);
+  });
+</script>
+
+{% endblock javascripts %}

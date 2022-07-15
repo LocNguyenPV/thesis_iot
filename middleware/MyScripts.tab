@@ -1,0 +1,1 @@
+2 * * * * python apps\home\__sensor_reading\cron.py 0x003,0x001 # Test _OFF

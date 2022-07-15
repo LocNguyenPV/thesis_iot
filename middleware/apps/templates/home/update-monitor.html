@@ -1,0 +1,61 @@
+{% extends "layouts/base.html" %} {% block title %} Manage Sensor {% endblock %}
+
+<!-- Specific Page CSS goes HERE  -->
+{% block stylesheets %}{% endblock stylesheets %} {% block content %}
+
+<div class="card">
+  <div class="card-header">
+    <h5 class="title">Update Monitor</h5>
+  </div>
+  <div class="card-body">
+    <form name="form" method="post" action="/update_monitor/{{sensor.address}}">
+      {% csrf_token %}
+      <div class="row m-2">
+        <div class="col-md-4 px-md-1">
+          <div class="form-group">
+            <h4>Monitor Name</h4>
+            <input
+              type="text"
+              name="name"
+              class="form-control"
+              value="{{ sensor.name }}"
+            />
+          </div>
+        </div>
+        <div class="col-md-4 pl-md-1">
+          <div class="form-group">
+            <h4 for="exampleInputEmail1">Monitor address ON</h4>
+            <input
+              type="text"
+              name="address"
+              disabled
+              class="form-control"
+              value="{{ sensor.address }}"
+            />
+          </div>
+        </div>
+        <div class="col-md-4 pl-md-1">
+          <div class="form-group">
+            <h4 for="exampleInputEmail1">Monitor address OFF</h4>
+            <input
+              type="text"
+              name="address_off"
+              class="form-control"
+              value="{{ sensor.address_off }}"
+            />
+          </div>
+        </div>
+      </div>
+      <a href="/sensors" class="btn btn-fill btn-primary">Back</a>
+      <button type="submit" class="btn btn-fill btn-success">Save</button>
+    </form>
+  </div>
+  <div class="card-footer"></div>
+</div>
+
+{% endblock content %}
+
+<!-- Specific Page JS goes HERE  -->
+{% block javascripts %}
+
+{% endblock javascripts %}
